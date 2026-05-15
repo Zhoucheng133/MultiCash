@@ -3,7 +3,7 @@ import { Card } from "./utils/card";
 import { User } from "./utils/user";
 import Database from "bun:sqlite";
 import { Auth } from "./utils/auth";
-import { Transaction } from "./utils/transaction";
+import { Record } from "./utils/record";
 import { toRequestResponse } from "./utils/types";
 
 const db = new Database('db/database.db');
@@ -11,7 +11,7 @@ const db = new Database('db/database.db');
 const auth=new Auth();
 const user=new User(db);
 const card=new Card(db);
-const transaction=new Transaction(db);
+const record=new Record(db);
 
 const app = new Elysia()
 
@@ -51,10 +51,10 @@ const app = new Elysia()
       return app;
     })
 
-    app.group("/transaction", (app)=>{
-      app.post("/add", ({ body })=>transaction.add(body));
-      app.post("/edit", ({ query, body })=>transaction.edit(query.id, body));
-      app.delete("/del", ({ query })=>transaction.remove(query.id));
+    app.group("/record", (app)=>{
+      app.post("/add", ({ body })=>record.add(body));
+      app.post("/edit", ({ query, body })=>record.edit(query.id, body));
+      app.delete("/del", ({ query })=>record.remove(query.id));
       return app;
     })
 

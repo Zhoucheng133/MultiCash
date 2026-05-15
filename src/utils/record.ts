@@ -7,7 +7,7 @@ interface CardRow {
   balance: number;
 }
 
-interface TransactionRow {
+interface RecordRow {
   id: string;
   card_id: string;
   type: number;
@@ -16,14 +16,14 @@ interface TransactionRow {
   status: number;
 }
 
-export class Transaction{
+export class Record {
 
   private database: Database;
 
-  initTransactionTable(){
+  initRecordTable(){
     // 注意type: 0表示入账，1表示出账
     this.database.prepare(`
-      CREATE TABLE IF NOT EXISTS transaction (
+      CREATE TABLE IF NOT EXISTS record (
         id TEXT PRIMARY KEY,
         card_id TEXT NOT NULL,
         type INTEGER NOT NULL,
@@ -38,7 +38,7 @@ export class Transaction{
 
   constructor(db: Database){
     this.database=db;
-    this.initTransactionTable();
+    this.initRecordTable();
   }
 
   // 添加账单
@@ -49,14 +49,14 @@ export class Transaction{
 
     const type = parseInt(body.type);
     if(type !== 0 && type !== 1){
-      return toRequestResponse(false, "Invalid transaction type, must be 0 (income) or 1 (expense)")
+      return toRequestResponse(false, "Invalid record type, must be 0 (income) or 1 (expense)")
     }
 
     const id = nanoid();
     const amount = parseFloat(body.amount);
 
     try {
-      const runTransaction = this.database.transaction(() => {
+      const runRecord = this.database.transaction(() => {
         const card = this.database.prepare(`
           SELECT balance FROM card WHERE id = $card_id AND status = 1
         `).get({
@@ -72,7 +72,7 @@ export class Transaction{
         const newBalance = type === 0 ? card.balance + amount : card.balance - amount;
 
         this.database.prepare(`
-          INSERT INTO transaction (id, card_id, type, amount, remark, status)
+          INSERT INTO record (id, card_id, type, amount, remark, status)
           VALUES ($id, $card_id, $type, $amount, $remark, $status)
         `).run({
           $id: id,
@@ -93,7 +93,7 @@ export class Transaction{
         return id;
       });
 
-      const txId = runTransaction();
+      const txId = runRecord();
       return toRequestResponse(true, txId);
 
     } catch (err: any) {
@@ -112,14 +112,14 @@ export class Transaction{
 
     const allowedFields = ["card_id", "type", "amount", "remark", "status"];
     const updates: string[] = [];
-    const params: Record<string, any> = { $id: id };
+    const params: { [key: string]: any } = { $id: id };
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
         if (field === "type") {
           const t = parseInt(body[field]);
           if (t !== 0 && t !== 1) {
-            return toRequestResponse(false, "Invalid transaction type, must be 0 (income) or 1 (expense)");
+            return toRequestResponse(false, "Invalid record type, must be 0 (income) or 1 (expense)");
           }
           params[`$${field}`] = t;
         } else if (field === "amount") {
@@ -141,14 +141,14 @@ export class Transaction{
 
     try {
       if (needBalanceUpdate) {
-        const runTransaction = this.database.transaction(() => {
+        const runRecord = this.database.transaction(() => {
           const oldTx = this.database.prepare(`
-            SELECT card_id, type, amount FROM transaction WHERE id = $id AND status = 1
+            SELECT card_id, type, amount FROM record WHERE id = $id AND status = 1
           `).get({
             $id: id
-          }) as TransactionRow | undefined;
+          }) as RecordRow | undefined;
 
-          if (!oldTx) throw new Error("Transaction not found");
+          if (!oldTx) throw new Error("Record not found");
 
           const oldCard = this.database.prepare(`
             SELECT balance FROM card WHERE id = $card_id AND status = 1
@@ -194,17 +194,17 @@ export class Transaction{
             $balance: newBalance, $card_id: newCardId
           });
 
-          const sql = `UPDATE transaction SET ${updates.join(", ")} WHERE id = $id`;
+          const sql = `UPDATE record SET ${updates.join(", ")} WHERE id = $id`;
           this.database.prepare(sql).run(params);
         });
 
-        runTransaction();
+        runRecord();
       } else {
-        const sql = `UPDATE transaction SET ${updates.join(", ")} WHERE id = $id`;
+        const sql = `UPDATE record SET ${updates.join(", ")} WHERE id = $id`;
         const result = this.database.prepare(sql).run(params);
 
         if (result.changes === 0) {
-          return toRequestResponse(false, "Transaction not found");
+          return toRequestResponse(false, "Record not found");
         }
       }
 
@@ -221,14 +221,14 @@ export class Transaction{
     }
 
     try {
-      const runTransaction = this.database.transaction(() => {
+      const runRecord = this.database.transaction(() => {
         const tx = this.database.prepare(`
-          SELECT card_id, type, amount FROM transaction WHERE id = $id AND status = 1
+          SELECT card_id, type, amount FROM record WHERE id = $id AND status = 1
         `).get({
           $id: id
-        }) as TransactionRow | undefined;
+        }) as RecordRow | undefined;
 
-        if (!tx) throw new Error("Transaction not found");
+        if (!tx) throw new Error("Record not found");
 
         const card = this.database.prepare(`
           SELECT balance FROM card WHERE id = $card_id AND status = 1
@@ -249,13 +249,13 @@ export class Transaction{
         });
 
         this.database.prepare(`
-          UPDATE transaction SET status = 0 WHERE id = $id
+          UPDATE record SET status = 0 WHERE id = $id
         `).run({
           $id: id
         });
       });
 
-      runTransaction();
+      runRecord();
       return toRequestResponse(true, "");
     } catch (err: any) {
       return toRequestResponse(false, err.message);
