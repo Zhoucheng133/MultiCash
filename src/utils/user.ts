@@ -63,7 +63,7 @@ export class User{
       value: refreshToken,
       maxAge: 30 * 24 * 60 * 60,
       httpOnly: true,
-      path: "/api/refresh",
+      path: "/api/auth/refresh",
     })
 
     return toRequestResponse(true, accessToken);

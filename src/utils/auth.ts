@@ -74,7 +74,7 @@ export class Auth{
   }
 
   refresh(cookie: any): RequestResponse {  
-    const refresh_token = cookie.animehelper_refresh_token;
+    const refresh_token = cookie.multicash_refresh_token;
     if (!refresh_token.value) {
       return toRequestResponse(false, "没有登录");
     }

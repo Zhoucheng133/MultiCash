@@ -28,6 +28,11 @@ const app = new Elysia()
     return app;
   })
 
+  app.group("/auth", (app)=>{
+    app.get("/refresh", ({ cookie })=>auth.refresh(cookie));
+    return app;
+  })
+
   .guard({
     beforeHandle({ headers, set }){
       const response=auth.jwtCheck(headers);
@@ -37,7 +42,6 @@ const app = new Elysia()
       }
     }
   }, (app)=>{
-    // app.get("/core/list", ()=>auth.list());
     app.get("/test", ()=>toRequestResponse(true, "test"))
     return app;
   })
