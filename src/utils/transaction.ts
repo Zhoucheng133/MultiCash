@@ -41,6 +41,7 @@ export class Transaction{
     this.initTransactionTable();
   }
 
+  // 添加账单
   add(body: any): RequestResponse{
     if(!body || !body.card_id || !body.type || !body.amount){
       return toRequestResponse(false, "Incorrect parameters")
@@ -95,6 +96,7 @@ export class Transaction{
     }
   }
 
+  // 编辑账单
   edit(id: string, body: any): RequestResponse {
     if (!id) {
       return toRequestResponse(false, "No ID provided");
