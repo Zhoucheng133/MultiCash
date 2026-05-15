@@ -58,8 +58,10 @@ export class Transaction{
     try {
       const runTransaction = this.database.transaction(() => {
         const card = this.database.prepare(`
-          SELECT balance FROM card WHERE id = ? AND status = 1
-        `).get(body.card_id) as CardRow | undefined;
+          SELECT balance FROM card WHERE id = $card_id AND status = 1
+        `).get({
+          $card_id: body.card_id 
+        }) as CardRow | undefined;
 
         if (!card) throw new Error("Card not found or disabled");
 
@@ -82,8 +84,11 @@ export class Transaction{
         });
 
         this.database.prepare(`
-          UPDATE card SET balance = ? WHERE id = ?
-        `).run(newBalance, body.card_id);
+          UPDATE card SET balance = $balance WHERE id = $card_id
+        `).run({
+          $balance: newBalance,
+          $card_id: body.card_id
+        });
 
         return id;
       });
@@ -138,14 +143,18 @@ export class Transaction{
       if (needBalanceUpdate) {
         const runTransaction = this.database.transaction(() => {
           const oldTx = this.database.prepare(`
-            SELECT card_id, type, amount FROM transaction WHERE id = ? AND status = 1
-          `).get(id) as TransactionRow | undefined;
+            SELECT card_id, type, amount FROM transaction WHERE id = $id AND status = 1
+          `).get({
+            $id: id
+          }) as TransactionRow | undefined;
 
           if (!oldTx) throw new Error("Transaction not found");
 
           const oldCard = this.database.prepare(`
-            SELECT balance FROM card WHERE id = ? AND status = 1
-          `).get(oldTx.card_id) as CardRow | undefined;
+            SELECT balance FROM card WHERE id = $card_id AND status = 1
+          `).get({
+            $card_id: oldTx.card_id
+          }) as CardRow | undefined;
 
           if (!oldCard) throw new Error("Original card not found or disabled");
 
@@ -154,16 +163,20 @@ export class Transaction{
             : oldCard.balance + oldTx.amount;
 
           this.database.prepare(`
-            UPDATE card SET balance = ? WHERE id = ?
-          `).run(oldBalance, oldTx.card_id);
+            UPDATE card SET balance = $balance WHERE id = $card_id
+          `).run({
+            $balance: oldBalance, $card_id: oldTx.card_id
+          });
 
           const newCardId = body.card_id ?? oldTx.card_id;
           const newType = body.type !== undefined ? parseInt(body.type) : oldTx.type;
           const newAmount = body.amount !== undefined ? parseFloat(body.amount) : oldTx.amount;
 
           const newCard = this.database.prepare(`
-            SELECT balance FROM card WHERE id = ? AND status = 1
-          `).get(newCardId) as CardRow | undefined;
+            SELECT balance FROM card WHERE id = $card_id AND status = 1
+          `).get({
+            $card_id: newCardId
+          }) as CardRow | undefined;
 
           if (!newCard) throw new Error("Target card not found or disabled");
 
@@ -176,8 +189,10 @@ export class Transaction{
             : newCard.balance - newAmount;
 
           this.database.prepare(`
-            UPDATE card SET balance = ? WHERE id = ?
-          `).run(newBalance, newCardId);
+            UPDATE card SET balance = $balance WHERE id = $card_id
+          `).run({
+            $balance: newBalance, $card_id: newCardId
+          });
 
           const sql = `UPDATE transaction SET ${updates.join(", ")} WHERE id = $id`;
           this.database.prepare(sql).run(params);
@@ -208,14 +223,18 @@ export class Transaction{
     try {
       const runTransaction = this.database.transaction(() => {
         const tx = this.database.prepare(`
-          SELECT card_id, type, amount FROM transaction WHERE id = ? AND status = 1
-        `).get(id) as TransactionRow | undefined;
+          SELECT card_id, type, amount FROM transaction WHERE id = $id AND status = 1
+        `).get({
+          $id: id
+        }) as TransactionRow | undefined;
 
         if (!tx) throw new Error("Transaction not found");
 
         const card = this.database.prepare(`
-          SELECT balance FROM card WHERE id = ? AND status = 1
-        `).get(tx.card_id) as CardRow | undefined;
+          SELECT balance FROM card WHERE id = $card_id AND status = 1
+        `).get({
+          $card_id: tx.card_id
+        }) as CardRow | undefined;
 
         if (!card) throw new Error("Card not found or disabled");
 
@@ -224,12 +243,16 @@ export class Transaction{
           : card.balance + tx.amount;
 
         this.database.prepare(`
-          UPDATE card SET balance = ? WHERE id = ?
-        `).run(newBalance, tx.card_id);
+          UPDATE card SET balance = $balance WHERE id = $card_id
+        `).run({
+          $balance: newBalance, $card_id: tx.card_id
+        });
 
         this.database.prepare(`
-          UPDATE transaction SET status = 0 WHERE id = ?
-        `).run(id);
+          UPDATE transaction SET status = 0 WHERE id = $id
+        `).run({
+          $id: id
+        });
       });
 
       runTransaction();
