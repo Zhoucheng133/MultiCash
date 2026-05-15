@@ -9,7 +9,7 @@ const db = new Database('db/database.db');
 
 const auth=new Auth();
 const user=new User(db);
-const card=new Card();
+const card=new Card(db);
 
 const app = new Elysia()
 
@@ -42,7 +42,13 @@ const app = new Elysia()
       }
     }
   }, (app)=>{
-    app.get("/test", ()=>toRequestResponse(true, "test"))
+    app.group("/card", (app)=>{
+      app.post("/add", ({ body })=>card.add(body));
+      app.delete("/del", ({ query })=>card.remove(query.id))
+      app.post("/edit", ({ query, body })=>card.edit(query.id, body))
+      return app;
+    })
+
     return app;
   })
 
