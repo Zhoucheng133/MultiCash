@@ -53,6 +53,7 @@ const app = new Elysia()
 
     app.group("/transaction", (app)=>{
       app.post("/add", ({ body })=>transaction.add(body));
+      app.post("/edit", ({ query, body })=>transaction.edit(query.id, body));
       return app;
     })
 
