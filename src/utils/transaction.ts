@@ -198,4 +198,44 @@ export class Transaction{
       return toRequestResponse(false, err.message);
     }
   }
+
+  // 删除账单
+  remove(id: string | undefined): RequestResponse {
+    if (!id) {
+      return toRequestResponse(false, "No ID provided");
+    }
+
+    try {
+      const runTransaction = this.database.transaction(() => {
+        const tx = this.database.prepare(`
+          SELECT card_id, type, amount FROM transaction WHERE id = ? AND status = 1
+        `).get(id) as TransactionRow | undefined;
+
+        if (!tx) throw new Error("Transaction not found");
+
+        const card = this.database.prepare(`
+          SELECT balance FROM card WHERE id = ? AND status = 1
+        `).get(tx.card_id) as CardRow | undefined;
+
+        if (!card) throw new Error("Card not found or disabled");
+
+        const newBalance = tx.type === 0
+          ? card.balance - tx.amount
+          : card.balance + tx.amount;
+
+        this.database.prepare(`
+          UPDATE card SET balance = ? WHERE id = ?
+        `).run(newBalance, tx.card_id);
+
+        this.database.prepare(`
+          UPDATE transaction SET status = 0 WHERE id = ?
+        `).run(id);
+      });
+
+      runTransaction();
+      return toRequestResponse(true, "");
+    } catch (err: any) {
+      return toRequestResponse(false, err.message);
+    }
+  }
 }
