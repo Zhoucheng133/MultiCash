@@ -89,7 +89,49 @@ export class Card{
     if(!id){
       return toRequestResponse(false, "No ID provided");
     }
+    if(!body || Object.keys(body).length === 0){
+      return toRequestResponse(false, "No update fields provided");
+    }
 
-    return toRequestResponse(true, "");
+    const allowedFields = ["bin", "name", "bank_name", "bank_code", "card_type", "status", "balance"];
+    const updates: string[] = [];
+    const params: Record<string, any> = { $id: id };
+
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updates.push(`${field} = $${field}`);
+        if (field === "balance") {
+          params[`$${field}`] = parseFloat(body[field]);
+        } else if (field === "status") {
+          params[`$${field}`] = parseInt(body[field]);
+        } else {
+          params[`$${field}`] = body[field];
+        }
+      }
+    }
+
+    if (updates.length === 0) {
+      return toRequestResponse(false, "No valid fields to update");
+    }
+
+    if (body.bin !== undefined) {
+      updates.push("bin_suffix = $bin_suffix");
+      params["$bin_suffix"] = body.bin.slice(-4);
+    }
+
+    updates.push("updated_at = CURRENT_TIMESTAMP");
+
+    try {
+      const sql = `UPDATE card SET ${updates.join(", ")} WHERE id = $id`;
+      const result = this.database.prepare(sql).run(params);
+
+      if (result.changes === 0) {
+        return toRequestResponse(false, "Card not found");
+      }
+
+      return toRequestResponse(true, "");
+    } catch (err: any) {
+      return toRequestResponse(false, err.message);
+    }
   }
 }
