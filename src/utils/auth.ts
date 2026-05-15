@@ -16,7 +16,7 @@ export function updateSecrets() {
   
   const content = `ACCESS_SECRET=${secrets.ACCESS_SECRET}\nREFRESH_SECRET=${secrets.REFRESH_SECRET}`;
   writeFileSync(ENV_PATH, content, "utf-8");
-  console.log("⚠️ 全局密钥已重置并持久化，所有旧 Token 已失效。");
+  console.log("[NOTE] JWT secrets updated");
 }
 
 export const getAccessSecret = () => secrets.ACCESS_SECRET;
@@ -51,7 +51,7 @@ export class Auth{
   jwtCheck(headers: any): RequestResponse{
     const token = headers.token;
     if (!token) {
-      return toRequestResponse(false, "未提供令牌");
+      return toRequestResponse(false, "No token provided");
     }
 
     try {
@@ -60,23 +60,23 @@ export class Auth{
       if (profile?.username) {
         return toRequestResponse(true, "");
       } else {
-        return toRequestResponse(false, "无效令牌");
+        return toRequestResponse(false, "Invalid token");
       }
 
     } catch (error: any) {
 
       if(error.name === "TokenExpiredError"){
-        return toRequestResponse(false, "令牌已过期");
+        return toRequestResponse(false, "The token has expired");
       }
       
-      return toRequestResponse(false, "无效令牌");
+      return toRequestResponse(false, "Invalid token");
     }
   }
 
   refresh(cookie: any): RequestResponse {  
     const refresh_token = cookie.multicash_refresh_token;
     if (!refresh_token.value) {
-      return toRequestResponse(false, "没有登录");
+      return toRequestResponse(false, "Not login yet");
     }
     try {
       const profile = jwt.verify(refresh_token.value, getRefreshSecret()) as any;
@@ -94,7 +94,7 @@ export class Auth{
 
         return toRequestResponse(true, newAccessToken);
       }else{
-        return toRequestResponse(false, "refresh_token 无效，请重新登录");
+        return toRequestResponse(false, "Invalid refresh token");
       }
 
     } catch (err: any) {

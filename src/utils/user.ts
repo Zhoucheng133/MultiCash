@@ -26,17 +26,17 @@ export class User{
   // 登录
   login(body: any, cookie: any): RequestResponse{
     if (!body || !body.username || !body.password) {
-      return toRequestResponse(false, "参数不正确");
+      return toRequestResponse(false, "Incorrect parameters");
     }
     const { username, password } = body;
 
     const user = this.database.prepare("SELECT password FROM user WHERE username = ?").get(username) as any;
     if (!user) {
-      return toRequestResponse(false, "用户名或密码不正确");
+      return toRequestResponse(false, "Incorrect username or password");
     }
     const match = bcrypt.compareSync(password, user.password);
     if (!match) {
-      return toRequestResponse(false, "用户名或密码不正确");
+      return toRequestResponse(false, "Incorrect username or password");
     }
 
     const accessToken=jwt.sign(
@@ -72,19 +72,19 @@ export class User{
   // 注册
   register(body: any): RequestResponse{
     if (!body || !body.username || !body.password) {
-      return toRequestResponse(false, "参数不正确");
+      return toRequestResponse(false, "Incorrect parameters");
     }
     const rowCount = this.database
       .prepare("SELECT COUNT(*) AS count FROM user")
       .get() as { count: number };
     if(rowCount.count != 0){
-      return toRequestResponse(false, "用户已存在")
+      return toRequestResponse(false, "The user already exists")
     }
     const { username, password } = body;
     try {
       const existingUser = this.database.prepare("SELECT * FROM user WHERE username = ?").get(username);
       if (existingUser) {
-        return toRequestResponse(false, "用户名已存在");
+        return toRequestResponse(false, "The user already exists");
       }
       const id=nanoid();
       this.database.prepare("INSERT INTO user (id, username, password) VALUES (?, ?, ?)")
