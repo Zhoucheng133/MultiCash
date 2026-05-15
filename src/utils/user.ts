@@ -30,7 +30,9 @@ export class User{
     }
     const { username, password } = body;
 
-    const user = this.database.prepare("SELECT password FROM user WHERE username = ?").get(username) as any;
+    const user = this.database.prepare("SELECT password FROM user WHERE username = $username").get({
+      $username: username,
+    }) as any;
     if (!user) {
       return toRequestResponse(false, "Incorrect username or password");
     }
@@ -82,13 +84,13 @@ export class User{
     }
     const { username, password } = body;
     try {
-      const existingUser = this.database.prepare("SELECT * FROM user WHERE username = ?").get(username);
-      if (existingUser) {
-        return toRequestResponse(false, "The user already exists");
-      }
       const id=nanoid();
-      this.database.prepare("INSERT INTO user (id, username, password) VALUES (?, ?, ?)")
-        .run(id, username, bcrypt.hashSync(password, 10));
+      this.database.prepare("INSERT INTO user (id, username, password) VALUES ($id, $username, $password)")
+        .run({
+          $id: id,
+          $username: username,
+          $password: bcrypt.hashSync(password, 10)
+        });
       return toRequestResponse(true, "");
     } catch (error) {
       return toRequestResponse(false, error)
