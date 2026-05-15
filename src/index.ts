@@ -3,6 +3,7 @@ import { Card } from "./utils/card";
 import { User } from "./utils/user";
 import Database from "bun:sqlite";
 import { Auth } from "./utils/auth";
+import { toRequestResponse } from "./utils/types";
 
 const db = new Database('db/database.db');
 
@@ -24,6 +25,20 @@ const app = new Elysia()
     app.post("/register", ({ body })=>user.register(body));
     app.get("/nouser", ()=>user.nouser());
 
+    return app;
+  })
+
+  .guard({
+    beforeHandle({ headers, set }){
+      const response=auth.jwtCheck(headers);
+      if(response.ok===false){
+        set.status = 401;
+        return response;
+      }
+    }
+  }, (app)=>{
+    // app.get("/core/list", ()=>auth.list());
+    app.get("/test", ()=>toRequestResponse(true, "test"))
     return app;
   })
 
