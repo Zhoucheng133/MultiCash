@@ -261,4 +261,69 @@ export class Record {
       return toRequestResponse(false, err.message);
     }
   }
+
+  list(query: any): RequestResponse {
+    try {
+      let sql = `
+        SELECT r.id, r.card_id, r.type, r.amount, r.remark, r.status, r.created_at,
+               c.name as card_name, c.bin_suffix
+        FROM record r
+        LEFT JOIN card c ON r.card_id = c.id
+        WHERE r.status = 1
+      `;
+      
+      const params: { [key: string]: any } = {};
+      
+      if (query.card_id && query.card_id !== "") {
+        sql += ` AND r.card_id = $card_id`;
+        params.$card_id = query.card_id;
+      }
+      
+      if (query.type !== undefined && query.type !== "") {
+        sql += ` AND r.type = $type`;
+        params.$type = parseInt(query.type);
+      }
+      
+      if (query.remark && query.remark !== "") {
+        sql += ` AND r.remark LIKE $remark`;
+        params.$remark = `%${query.remark}%`;
+      }
+      
+      if (query.amount) {
+        const amountValue = parseFloat(query.amount);
+        if (query.amount_compare === "gt") {
+          sql += ` AND r.amount > $amount`;
+          params.$amount = amountValue;
+        } else if (query.amount_compare === "lt") {
+          sql += ` AND r.amount < $amount`;
+          params.$amount = amountValue;
+        } else if (query.amount_compare === "eq") {
+          sql += ` AND r.amount = $amount`;
+          params.$amount = amountValue;
+        }
+      }
+      
+      if (query.created_at) {
+        const dateValue = query.created_at;
+        if (query.created_at_compare === "gt") {
+          sql += ` AND r.created_at > $created_at`;
+          params.$created_at = dateValue;
+        } else if (query.created_at_compare === "lt") {
+          sql += ` AND r.created_at < $created_at`;
+          params.$created_at = dateValue;
+        } else if (query.created_at_compare === "eq") {
+          sql += ` AND r.created_at = $created_at`;
+          params.$created_at = dateValue;
+        }
+      }
+      
+      sql += ` ORDER BY r.created_at DESC`;
+      
+      const records = this.database.prepare(sql).all(params);
+      
+      return toRequestResponse(true, records);
+    } catch (err: any) {
+      return toRequestResponse(false, err.message);
+    }
+  }
 }

@@ -4,7 +4,6 @@ import { User } from "./utils/user";
 import Database from "bun:sqlite";
 import { Auth } from "./utils/auth";
 import { Record } from "./utils/record";
-import { toRequestResponse } from "./utils/types";
 
 const db = new Database('db/database.db');
 
@@ -45,6 +44,7 @@ const app = new Elysia()
     }
   }, (app)=>{
     app.group("/card", (app)=>{
+      app.get("/list", ()=>card.list());
       app.post("/add", ({ body })=>card.add(body));
       app.delete("/del", ({ query })=>card.remove(query.id))
       app.post("/edit", ({ query, body })=>card.edit(query.id, body))
@@ -52,6 +52,7 @@ const app = new Elysia()
     })
 
     app.group("/record", (app)=>{
+      app.get("/list", ({ query })=>record.list(query));
       app.post("/add", ({ body })=>record.add(body));
       app.post("/edit", ({ query, body })=>record.edit(query.id, body));
       app.delete("/del", ({ query })=>record.remove(query.id));
