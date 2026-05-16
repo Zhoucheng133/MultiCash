@@ -31,6 +31,7 @@ const app = new Elysia()
 
   app.group("/auth", (app)=>{
     app.get("/refresh", ({ cookie })=>auth.refresh(cookie));
+    app.get("/check", ({ headers })=>auth.jwtCheck(headers));
     return app;
   })
 
@@ -46,8 +47,8 @@ const app = new Elysia()
     app.group("/card", (app)=>{
       app.get("/list", ()=>card.list());
       app.post("/add", ({ body })=>card.add(body));
-      app.delete("/del", ({ query })=>card.remove(query.id))
-      app.post("/edit", ({ query, body })=>card.edit(query.id, body))
+      app.delete("/del", ({ query })=>card.remove(query.id));
+      app.post("/edit", ({ query, body })=>card.edit(query.id, body));
       return app;
     })
 
