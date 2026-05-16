@@ -134,4 +134,19 @@ export class Card{
       return toRequestResponse(false, err.message);
     }
   }
+
+  list(): RequestResponse {
+    try {
+      const cards = this.database.prepare(`
+        SELECT id, bin_suffix, name, bank_name, bank_code, card_type, status, balance, created_at, updated_at 
+        FROM card 
+        WHERE status = 1
+        ORDER BY created_at DESC
+      `).all();
+      
+      return toRequestResponse(true, cards);
+    } catch (err: any) {
+      return toRequestResponse(false, err.message);
+    }
+  }
 }
