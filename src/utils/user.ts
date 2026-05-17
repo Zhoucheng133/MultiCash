@@ -97,6 +97,17 @@ export class User{
     }
   }
 
+  // 注销
+  logout(cookie: any): RequestResponse {
+    cookie.multicash_refresh_token.set({
+      value: "",
+      maxAge: 0,
+      httpOnly: true,
+      path: "/api/auth/refresh",
+    });
+    return toRequestResponse(true, "");
+  }
+
   // 检查是否有用户
   nouser(): RequestResponse {
     const rowCount = this.database
