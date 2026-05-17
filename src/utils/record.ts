@@ -44,12 +44,12 @@ export class Record {
   // 添加账单
   add(body: any): RequestResponse{
     if(!body || !body.card_id || !body.type || !body.amount){
-      return toRequestResponse(false, "Incorrect parameters")
+      return toRequestResponse(false, "参数错误")
     }
 
     const type = parseInt(body.type);
     if(type !== 0 && type !== 1){
-      return toRequestResponse(false, "Invalid record type, must be 0 (income) or 1 (expense)")
+      return toRequestResponse(false, "无效的记录类型，必须是 0（入账）或 1（出账）")
     }
 
     const id = nanoid();
@@ -63,10 +63,10 @@ export class Record {
           $card_id: body.card_id 
         }) as CardRow | undefined;
 
-        if (!card) throw new Error("Card not found or disabled");
+        if (!card) throw new Error("卡片不存在或已禁用");
 
         if (type === 1 && card.balance < amount) {
-          throw new Error("Insufficient balance");
+          throw new Error("余额不足");
         }
 
         const newBalance = type === 0 ? card.balance + amount : card.balance - amount;
@@ -104,10 +104,10 @@ export class Record {
   // 编辑账单
   edit(id: string, body: any): RequestResponse {
     if (!id) {
-      return toRequestResponse(false, "No ID provided");
+      return toRequestResponse(false, "未提供ID");
     }
     if (!body || Object.keys(body).length === 0) {
-      return toRequestResponse(false, "No update fields provided");
+      return toRequestResponse(false, "未提供更新字段");
     }
 
     const allowedFields = ["card_id", "type", "amount", "remark", "status"];
@@ -119,7 +119,7 @@ export class Record {
         if (field === "type") {
           const t = parseInt(body[field]);
           if (t !== 0 && t !== 1) {
-            return toRequestResponse(false, "Invalid record type, must be 0 (income) or 1 (expense)");
+            return toRequestResponse(false, "无效的记录类型，必须是 0（入账）或 1（出账）");
           }
           params[`$${field}`] = t;
         } else if (field === "amount") {
@@ -134,7 +134,7 @@ export class Record {
     }
 
     if (updates.length === 0) {
-      return toRequestResponse(false, "No valid fields to update");
+      return toRequestResponse(false, "没有有效的更新字段");
     }
 
     const needBalanceUpdate = body.type !== undefined || body.amount !== undefined || body.card_id !== undefined;
@@ -148,7 +148,7 @@ export class Record {
             $id: id
           }) as RecordRow | undefined;
 
-          if (!oldTx) throw new Error("Record not found");
+          if (!oldTx) throw new Error("记录不存在");
 
           const oldCard = this.database.prepare(`
             SELECT balance FROM card WHERE id = $card_id AND status = 1
@@ -156,7 +156,7 @@ export class Record {
             $card_id: oldTx.card_id
           }) as CardRow | undefined;
 
-          if (!oldCard) throw new Error("Original card not found or disabled");
+          if (!oldCard) throw new Error("原卡片不存在或已禁用");
 
           const oldBalance = oldTx.type === 0
             ? oldCard.balance - oldTx.amount
@@ -178,10 +178,10 @@ export class Record {
             $card_id: newCardId
           }) as CardRow | undefined;
 
-          if (!newCard) throw new Error("Target card not found or disabled");
+          if (!newCard) throw new Error("目标卡片不存在或已禁用");
 
           if (newType === 1 && newCard.balance < newAmount) {
-            throw new Error("Insufficient balance");
+            throw new Error("余额不足");
           }
 
           const newBalance = newType === 0
@@ -204,7 +204,7 @@ export class Record {
         const result = this.database.prepare(sql).run(params);
 
         if (result.changes === 0) {
-          return toRequestResponse(false, "Record not found");
+          return toRequestResponse(false, "记录不存在");
         }
       }
 
@@ -217,7 +217,7 @@ export class Record {
   // 删除账单
   remove(id: string | undefined): RequestResponse {
     if (!id) {
-      return toRequestResponse(false, "No ID provided");
+      return toRequestResponse(false, "未提供ID");
     }
 
     try {
@@ -228,7 +228,7 @@ export class Record {
           $id: id
         }) as RecordRow | undefined;
 
-        if (!tx) throw new Error("Record not found");
+        if (!tx) throw new Error("记录不存在");
 
         const card = this.database.prepare(`
           SELECT balance FROM card WHERE id = $card_id AND status = 1
@@ -236,7 +236,7 @@ export class Record {
           $card_id: tx.card_id
         }) as CardRow | undefined;
 
-        if (!card) throw new Error("Card not found or disabled");
+        if (!card) throw new Error("卡片不存在或已禁用");
 
         const newBalance = tx.type === 0
           ? card.balance - tx.amount

@@ -35,13 +35,13 @@ export class Card{
       const info=await lookupBin(bin);
       return toRequestResponse(true, info)
     }else{
-      return toRequestResponse(false, "Please provide a valid bin")
+      return toRequestResponse(false, "请提供有效的BIN码")
     }
   }
 
   add(body: any): RequestResponse{
     if(!body || !body.bin || !body.name || !body.bank_name || !body.bank_code || !body.card_type){
-      return toRequestResponse(false, "Incorrect parameters")
+      return toRequestResponse(false, "参数错误")
     }
 
     const id=nanoid();
@@ -70,7 +70,7 @@ export class Card{
 
   remove(id: string | undefined): RequestResponse {
     if(!id){
-      return toRequestResponse(false, "No ID provided");
+      return toRequestResponse(false, "未提供ID");
     }
     try {
       this.database.prepare(`
@@ -87,10 +87,10 @@ export class Card{
 
   edit(id: string, body: any): RequestResponse {
     if(!id){
-      return toRequestResponse(false, "No ID provided");
+      return toRequestResponse(false, "未提供ID");
     }
     if(!body || Object.keys(body).length === 0){
-      return toRequestResponse(false, "No update fields provided");
+      return toRequestResponse(false, "未提供更新字段");
     }
 
     const allowedFields = ["bin", "name", "bank_name", "bank_code", "card_type", "status", "balance"];
@@ -111,7 +111,7 @@ export class Card{
     }
 
     if (updates.length === 0) {
-      return toRequestResponse(false, "No valid fields to update");
+      return toRequestResponse(false, "没有有效的更新字段");
     }
 
     if (body.bin !== undefined) {
@@ -126,7 +126,7 @@ export class Card{
       const result = this.database.prepare(sql).run(params);
 
       if (result.changes === 0) {
-        return toRequestResponse(false, "Card not found");
+        return toRequestResponse(false, "卡片不存在");
       }
 
       return toRequestResponse(true, "");

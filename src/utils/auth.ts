@@ -51,7 +51,7 @@ export class Auth{
   jwtCheck(headers: any): RequestResponse{
     const token = headers.token;
     if (!token) {
-      return toRequestResponse(false, "No token provided");
+      return toRequestResponse(false, "未提供令牌");
     }
 
     try {
@@ -60,23 +60,23 @@ export class Auth{
       if (profile?.username) {
         return toRequestResponse(true, "");
       } else {
-        return toRequestResponse(false, "Invalid token");
+        return toRequestResponse(false, "令牌无效");
       }
 
     } catch (error: any) {
 
       if(error.name === "TokenExpiredError"){
-        return toRequestResponse(false, "The token has expired");
+        return toRequestResponse(false, "令牌已过期");
       }
       
-      return toRequestResponse(false, "Invalid token");
+      return toRequestResponse(false, "令牌无效");
     }
   }
 
   refresh(cookie: any): RequestResponse {  
     const refresh_token = cookie.multicash_refresh_token;
     if (!refresh_token.value) {
-      return toRequestResponse(false, "Not login yet");
+      return toRequestResponse(false, "没有登录");
     }
     try {
       const profile = jwt.verify(refresh_token.value, getRefreshSecret()) as any;
@@ -94,7 +94,7 @@ export class Auth{
 
         return toRequestResponse(true, newAccessToken);
       }else{
-        return toRequestResponse(false, "Invalid refresh token");
+        return toRequestResponse(false, "刷新令牌无效");
       }
 
     } catch (err: any) {

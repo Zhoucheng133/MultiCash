@@ -26,7 +26,7 @@ export class User{
   // 登录
   login(body: any, cookie: any): RequestResponse{
     if (!body || !body.username || !body.password) {
-      return toRequestResponse(false, "Incorrect parameters");
+      return toRequestResponse(false, "参数错误");
     }
     const { username, password } = body;
 
@@ -34,11 +34,11 @@ export class User{
       $username: username,
     }) as any;
     if (!user) {
-      return toRequestResponse(false, "Incorrect username or password");
+      return toRequestResponse(false, "用户名或密码错误");
     }
     const match = bcrypt.compareSync(password, user.password);
     if (!match) {
-      return toRequestResponse(false, "Incorrect username or password");
+      return toRequestResponse(false, "用户名或密码错误");
     }
 
     const accessToken=jwt.sign(
@@ -74,13 +74,13 @@ export class User{
   // 注册
   register(body: any): RequestResponse{
     if (!body || !body.username || !body.password) {
-      return toRequestResponse(false, "Incorrect parameters");
+      return toRequestResponse(false, "参数错误");
     }
     const rowCount = this.database
       .prepare("SELECT COUNT(*) AS count FROM user")
       .get() as { count: number };
     if(rowCount.count != 0){
-      return toRequestResponse(false, "The user already exists")
+      return toRequestResponse(false, "用户已存在")
     }
     const { username, password } = body;
     try {
