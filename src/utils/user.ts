@@ -108,6 +108,27 @@ export class User{
     return toRequestResponse(true, "");
   }
 
+  // 修改密码
+  changePwd(body: any, headers: any): RequestResponse {
+    if (!body || !body.password || !body.newPassword) {
+      return toRequestResponse(false, "参数错误");
+    }
+    const { password, newPassword } = body;
+    try {
+      const decoded = jwt.verify(headers.token, getAccessSecret()) as any;
+      const username = decoded.username;
+      const user = this.database.prepare("SELECT password FROM user WHERE username = ?").get(username) as any;
+      if (!user || !bcrypt.compareSync(password, user.password)) {
+        return toRequestResponse(false, "旧密码不正确");
+      }
+      this.database.prepare("UPDATE user SET password = ? WHERE username = ?")
+        .run(bcrypt.hashSync(newPassword, 10), username);
+      return toRequestResponse(true, "修改成功，请重新登录");
+    } catch (error) {
+      return toRequestResponse(false, "身份验证失败或已过期");
+    }
+  }
+
   // 检查是否有用户
   nouser(): RequestResponse {
     const rowCount = this.database

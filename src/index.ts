@@ -25,6 +25,7 @@ const app = new Elysia()
     app.post("/login", ({ body, cookie })=>user.login(body, cookie));
     app.post("/register", ({ body })=>user.register(body));
     app.post("/logout", ({ cookie })=>user.logout(cookie));
+    app.post("/changepwd", ({ body, headers })=>user.changePwd(body, headers));
     app.get("/nouser", ()=>user.nouser());
 
     return app;
