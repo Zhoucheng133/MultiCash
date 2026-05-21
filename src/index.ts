@@ -15,11 +15,6 @@ const record=new Record(db);
 const app = new Elysia()
 
 .group("/api", (app)=>{
-  app.group("/card", (app)=>{
-    app.get("/bincheck", ({ query })=>card.cardBinCheck(query.bin));
-
-    return app;
-  })
   
   app.group("/user", (app)=>{
     app.post("/login", ({ body, cookie })=>user.login(body, cookie));
@@ -38,15 +33,15 @@ const app = new Elysia()
   })
 
   .guard({
-    beforeHandle({ headers, set }){
+    beforeHandle({ headers }){
       const response=auth.jwtCheck(headers);
       if(response.ok===false){
-        set.status = 401;
         return response;
       }
     }
   }, (app)=>{
     app.group("/card", (app)=>{
+      app.get("/bincheck", ({ query })=>card.cardBinCheck(query.bin));
       app.get("/list", ()=>card.list());
       app.post("/add", ({ body })=>card.add(body));
       app.delete("/del", ({ query })=>card.remove(query.id));
