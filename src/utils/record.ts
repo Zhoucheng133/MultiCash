@@ -45,7 +45,7 @@ export class Record {
 
   // 添加账单
   add(body: any): RequestResponse{
-    if(!body || !body.card_id || !body.type || !body.amount){
+    if(!body || !body.card_id || body.type==undefined || body.type==null || !body.amount){
       return toRequestResponse(false, "参数错误")
     }
 
