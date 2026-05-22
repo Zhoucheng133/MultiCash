@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { RequestResponse, toRequestResponse } from "./types";
 import { lookupBin } from "card-bin-db";
 import Database from "bun:sqlite";
+import dayjs from "dayjs";
 
 export class Card{
 
@@ -19,8 +20,8 @@ export class Card{
         card_type TEXT,
         status INTEGER DEFAULT 1,
         balance REAL DEFAULT 0.00,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at INTEGER DEFAULT (unixepoch()),
+        updated_at INTEGER DEFAULT (unixepoch())
       )
     `).run()
   }
@@ -49,8 +50,8 @@ export class Card{
 
     try {
       this.database.prepare(`
-        INSERT INTO card (id, bin, bin_suffix, name, bank_name, bank_code, card_type, status, balance)
-        VALUES ($id, $bin, $bin_suffix, $name, $bank_name, $bank_code, $card_type, $status, $balance)
+        INSERT INTO card (id, bin, bin_suffix, name, bank_name, bank_code, card_type, status, balance, created_at, updated_at)
+        VALUES ($id, $bin, $bin_suffix, $name, $bank_name, $bank_code, $card_type, $status, $balance, $created_at, $updated_at)
       `).run({
         $id: id,
         $bin: body.bin,
@@ -61,6 +62,8 @@ export class Card{
         $status: body.status ?? 1,
         $balance: initialBalance,
         $bin_suffix: body.bin.slice(-4),
+        $created_at: dayjs().unix(),
+        $updated_at: dayjs().unix(),
       });
       return toRequestResponse(true, id);
     } catch (err: any) {
@@ -119,7 +122,8 @@ export class Card{
       params["$bin_suffix"] = body.bin.slice(-4);
     }
 
-    updates.push("updated_at = CURRENT_TIMESTAMP");
+    updates.push("updated_at = $updated_at");
+    params["$updated_at"] = dayjs().unix();
 
     try {
       const sql = `UPDATE card SET ${updates.join(", ")} WHERE id = $id`;

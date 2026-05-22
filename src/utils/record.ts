@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { RequestResponse, toRequestResponse } from "./types";
 import Database from "bun:sqlite";
+import dayjs from "dayjs";
 
 interface CardRow {
   id: string;
@@ -30,7 +31,8 @@ export class Record {
         amount REAL NOT NULL,
         remark TEXT,
         status INTEGER DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at INTEGER DEFAULT (unixepoch()),
+        updated_at INTEGER DEFAULT (unixepoch()),
         FOREIGN KEY (card_id) REFERENCES card(id)
       )
     `).run()
@@ -72,15 +74,17 @@ export class Record {
         const newBalance = type === 0 ? card.balance + amount : card.balance - amount;
 
         this.database.prepare(`
-          INSERT INTO record (id, card_id, type, amount, remark, status)
-          VALUES ($id, $card_id, $type, $amount, $remark, $status)
+          INSERT INTO record (id, card_id, type, amount, remark, status, created_at, updated_at)
+          VALUES ($id, $card_id, $type, $amount, $remark, $status, $created_at, $updated_at)
         `).run({
           $id: id,
           $card_id: body.card_id,
           $type: type,
           $amount: amount,
           $remark: body.remark ?? "",
-          $status: body.status ?? 1
+          $status: body.status ?? 1,
+          $created_at: dayjs().unix(),
+          $updated_at: dayjs().unix(),
         });
 
         this.database.prepare(`
@@ -136,6 +140,8 @@ export class Record {
     if (updates.length === 0) {
       return toRequestResponse(false, "没有有效的更新字段");
     }
+
+    updates.push(`updated_at = ${dayjs().unix()}`);
 
     const needBalanceUpdate = body.type !== undefined || body.amount !== undefined || body.card_id !== undefined;
 
