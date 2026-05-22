@@ -153,4 +153,23 @@ export class Card{
       return toRequestResponse(false, err.message);
     }
   }
+
+  info(id: string): RequestResponse{
+    if(!id){
+      return toRequestResponse(false, "未提供ID");
+    }
+    try {
+      const card = this.database.prepare(`
+        SELECT id, bin_suffix, name, bank_name, bank_code, card_type, status, balance, created_at, updated_at 
+        FROM card 
+        WHERE id = $id
+      `).get({
+        $id: id
+      });
+      
+      return toRequestResponse(true, card);
+    } catch (err: any) {
+      return toRequestResponse(false, err.message);
+    }
+  }
 }

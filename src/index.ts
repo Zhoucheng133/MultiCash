@@ -46,6 +46,7 @@ const app = new Elysia()
       app.post("/add", ({ body })=>card.add(body));
       app.delete("/del", ({ query })=>card.remove(query.id));
       app.post("/edit", ({ query, body })=>card.edit(query.id, body));
+      app.get("/info", ({ query })=>card.info(query.id));
       return app;
     })
 
