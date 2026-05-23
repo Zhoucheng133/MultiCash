@@ -160,7 +160,7 @@ export class Card{
     }
     try {
       const card = this.database.prepare(`
-        SELECT id, bin_suffix, name, bank_name, bank_code, card_type, status, balance, created_at, updated_at 
+        SELECT bin 
         FROM card 
         WHERE id = $id
       `).get({
