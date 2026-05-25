@@ -248,6 +248,10 @@ export class Record {
           ? card.balance - tx.amount
           : card.balance + tx.amount;
 
+        if (newBalance < 0) {
+          throw new Error("删除失败：余额不足以扣减（将导致卡片余额为负）");
+        }
+
         this.database.prepare(`
           UPDATE card SET balance = $balance WHERE id = $card_id
         `).run({
