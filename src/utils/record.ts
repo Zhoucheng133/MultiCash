@@ -279,7 +279,7 @@ export class Record {
           c.name as card_name, c.bin_suffix
         FROM record r
         LEFT JOIN card c ON r.card_id = c.id
-        WHERE r.status = 1
+        WHERE 1=1
       `;
       
       const params: { [key: string]: any } = {};
