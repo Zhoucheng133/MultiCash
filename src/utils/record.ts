@@ -325,6 +325,10 @@ export class Record {
         }
         params.$created_at = dateValue;
       }
+
+      if(query.status !== undefined && query.status !== null && query.status !== ""){
+        sql += ` AND r.status = $status`;
+      }
       
       sql += ` ORDER BY r.created_at DESC`;
       
