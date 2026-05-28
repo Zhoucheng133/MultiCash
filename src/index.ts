@@ -1,9 +1,10 @@
-import { Elysia } from "elysia";
+import { Elysia, file } from "elysia";
 import { Card } from "./utils/card";
 import { User } from "./utils/user";
 import Database from "bun:sqlite";
 import { Auth } from "./utils/auth";
 import { Record } from "./utils/record";
+import staticPlugin from "@elysia/static";
 
 const db = new Database('db/database.db');
 
@@ -13,6 +14,12 @@ const card=new Card(db);
 const record=new Record(db);
 
 const app = new Elysia()
+
+.use(staticPlugin({
+  prefix: "/",
+  alwaysStatic: true,
+  assets: "frontend/dist"
+}))
 
 .group("/api", (app)=>{
   
@@ -62,6 +69,10 @@ const app = new Elysia()
   })
 
   return app;
-}).listen(3000);
+})
+
+.get("/*", ()=>file("frontend/dist/index.html"))
+
+.listen(3000);
 
 console.log(`🦊 Elysia is running at http://127.0.0.1:${app.server?.port}`);
