@@ -39,32 +39,33 @@ const app = new Elysia()
     return app;
   })
 
-  .guard({
-    beforeHandle({ headers }){
+  app.group("/card", (app)=>{
+    app.onBeforeHandle(({ headers })=>{
       const response=auth.jwtCheck(headers);
       if(response.ok===false){
         return response;
       }
-    }
-  }, (app)=>{
-    app.group("/card", (app)=>{
-      app.get("/bincheck", ({ query })=>card.cardBinCheck(query.bin));
-      app.get("/list", ()=>card.list());
-      app.post("/add", ({ body })=>card.add(body));
-      app.delete("/del", ({ query })=>card.remove(query.id));
-      app.post("/edit", ({ query, body })=>card.edit(query.id, body));
-      app.get("/info", ({ query })=>card.info(query.id));
-      return app;
     })
+    app.get("/bincheck", ({ query })=>card.cardBinCheck(query.bin));
+    app.get("/list", ()=>card.list());
+    app.post("/add", ({ body })=>card.add(body));
+    app.delete("/del", ({ query })=>card.remove(query.id));
+    app.post("/edit", ({ query, body })=>card.edit(query.id, body));
+    app.get("/info", ({ query })=>card.info(query.id));
+    return app;
+  })
 
-    app.group("/record", (app)=>{
-      app.get("/list", ({ query })=>record.list(query));
-      app.post("/add", ({ body })=>record.add(body));
-      app.post("/edit", ({ query, body })=>record.edit(query.id, body));
-      app.delete("/del", ({ query })=>record.remove(query.id));
-      return app;
+  app.group("/record", (app)=>{
+    app.onBeforeHandle(({ headers })=>{
+      const response=auth.jwtCheck(headers);
+      if(response.ok===false){
+        return response;
+      }
     })
-
+    app.get("/list", ({ query })=>record.list(query));
+    app.post("/add", ({ body })=>record.add(body));
+    app.post("/edit", ({ query, body })=>record.edit(query.id, body));
+    app.delete("/del", ({ query })=>record.remove(query.id));
     return app;
   })
 

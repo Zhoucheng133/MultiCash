@@ -13,7 +13,13 @@ RUN bun run build
 WORKDIR /app
 RUN bun install
 
-RUN bun build --compile --target bun --outfile server src/index.ts
+RUN bun build \
+--compile \
+--minify-whitespace \
+--minify-syntax \
+--target bun \
+--outfile server \
+./src/index.ts
 
 EXPOSE 3000
 
