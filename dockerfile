@@ -5,8 +5,12 @@ WORKDIR /app
 COPY . .
 ENV TZ=Asia/Shanghai
 
-RUN cd frontend && bun install && bun run build
+WORKDIR /app/frontend
+RUN bun install
+RUN bun run build
 
+
+WORKDIR /app
 RUN bun install
 
 RUN bun build \
