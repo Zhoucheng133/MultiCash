@@ -1,12 +1,12 @@
 import { nanoid } from "nanoid";
 import { RequestResponse, toRequestResponse } from "./types";
-import { lookupBin } from "card-bin-db";
 import Database from "bun:sqlite";
 import dayjs from "dayjs";
 
 export class Card{
 
   private database: Database;
+  private bindb: Database;
 
   initCardTable(){
     this.database.prepare(`
@@ -29,12 +29,23 @@ export class Card{
   constructor(db: Database){
     this.database=db;
     this.initCardTable();
+    this.bindb = new Database("./bin.db");
   }
   
   async cardBinCheck(bin: string | undefined): Promise<RequestResponse>{
-    if (bin) {
-      const info=await lookupBin(bin);
-      return toRequestResponse(true, info)
+    if (bin && bin.length === 6) {
+      try {
+        const data=this.bindb.prepare(`
+          SELECT bin, brand, type, category, issuer, country
+          FROM bin
+          WHERE bin = $bin
+        `).get({
+          $bin: bin
+        });
+        return toRequestResponse(true, data);
+      } catch (error) {
+        return toRequestResponse(false, error);
+      }
     }else{
       return toRequestResponse(false, "请提供有效的BIN码")
     }
