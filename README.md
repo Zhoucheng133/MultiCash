@@ -19,3 +19,21 @@ sudo docker run -d \
 -v <主机上存储数据库的位置*>:/app/db \
 zhouc1230/multicash:latest
 ```
+
+### 更新
+
+```bash
+# 拉取最新镜像
+docker pull zhouc1230/multicash:latest
+# 停止旧容器
+docker stop multicash
+# 删除旧容器
+docker rm multicash
+# 启动新容器
+sudo docker run -d \
+--restart always \
+--name multicash \
+-p <主机端口>:3000 \
+-v <主机上存储数据库的位置>:/app/db \
+zhouc1230/multicash:latest
+```
