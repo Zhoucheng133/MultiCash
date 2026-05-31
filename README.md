@@ -4,9 +4,6 @@
 
 ![License](https://img.shields.io/badge/License-MIT-dark_green)
 
-> [!WARNING]
-> 仍在测试中
-
 ## 快速开始
 
 ### 部署
